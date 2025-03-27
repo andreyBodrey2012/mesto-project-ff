@@ -2,7 +2,7 @@
 const cardTemplate = document.querySelector('#card-template').content;
 
 // @todo: DOM узлы
-const cardPlace = document.querySelector('.places__list');
+const cardsPlace = document.querySelector('.places__list');
 
 // @todo: Функция создания карточки
 function createCard(params, deleteCard) {
@@ -13,7 +13,7 @@ function createCard(params, deleteCard) {
     cardImage.alt = params.name;
     cloneCard.querySelector('.card__delete-button').addEventListener('click', () => { deleteCard(cloneCard) });
 
-    cardPlace.append(cloneCard);
+    return cloneCard;
 }
 
 // @todo: Функция удаления карточки
@@ -26,6 +26,5 @@ function deleteCard(element) {
 // @todo: Вывести карточки на страницу
 document.querySelector(".footer__copyright").innerText = `© ${(new Date).getFullYear()} Mesto Russia`;
 
-initialCards.forEach((item)=>{
-    createCard(item, deleteCard);
-});
+const cards = initialCards.map((item) => createCard(item, deleteCard));
+cardsPlace.append(...cards);
