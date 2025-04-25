@@ -15,13 +15,13 @@ export function handlerClosePopup(evt) {
 }
 
 function handlerKeyClosePopup(evt) {
-  if (evt.keyCode === 27) {
+  if (evt.code == "Escape") {
     closePopup(document.querySelector(defautPopupIsOpenedSelector));
   }
 }
 
-export function openWindow(element, classOpened = defaultClassOpened) {
-  return (evt) => {
+export function openPopup(element, classOpened = defaultClassOpened) {
+  return () => {
     element.classList.add(classOpened);
     element.addEventListener("click", handlerClosePopup);
     document.addEventListener("keydown", handlerKeyClosePopup);

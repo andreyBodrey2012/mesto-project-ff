@@ -1,11 +1,50 @@
 // @todo: Функция создания карточки
-export function createCard(data, { template, titleSelecor, imageSelector }) {
+import { openPopup } from "../popup/modal";
+
+const popupTypeImage = ".popup_type_image";
+
+export function createCard(
+  data,
+  {
+    template,
+    titleSelecor,
+    imageSelector,
+    cardDeleteButtonSelector,
+    cardLikeButtonSelector,
+    cardLikeButtonIsActive,
+    onDeleteCard,
+    onLikeCard,
+    onClickImageCard,
+  },
+) {
   const card = template.cloneNode(true);
   card.querySelector(titleSelecor).innerText = data.name;
   const cardImage = card.querySelector(imageSelector);
 
+  const imageCard = ".card__image";
+  const cardImages = document.querySelectorAll(imageCard);
+  const popupImage = document.querySelector(popupTypeImage);
+
+  cardImages.forEach((element) => {
+    element.addEventListener("click", openPopup(popupImage));
+  });
+
   cardImage.src = data.link;
   cardImage.alt = data.name;
+
+  card.querySelector(cardDeleteButtonSelector).addEventListener("click", () => {
+    onDeleteCard(card);
+  });
+  card.querySelector(cardLikeButtonSelector).addEventListener("click", () => {
+    onLikeCard(
+      card.querySelector(cardLikeButtonSelector),
+      cardLikeButtonIsActive,
+    );
+  });
+
+  card
+    .querySelector(imageSelector)
+    .addEventListener("click", onClickImageCard(data));
 
   return card;
 }

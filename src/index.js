@@ -1,6 +1,6 @@
 import { createCard, deleteCard, likeCard } from "./cards/card";
 import { initialCards } from "./cards/cards";
-import { openWindow, handlerClosePopup, closePopup } from "./popup/modal";
+import { openPopup, handlerClosePopup, closePopup } from "./popup/modal";
 import "./css/index.css";
 
 const elementSelectors = {
@@ -61,54 +61,40 @@ const profileDescription = document.querySelector(
   elementSelectors.profileDescription,
 );
 
-const openPopupImage = openWindow(popupImage);
+const openPopupImage = openPopup(popupImage);
 
 function handleClickImage(data) {
-  return (evt) => {
+  return () => {
     document.querySelector(elementSelectors.popupImage).src = data.link;
     document.querySelector(elementSelectors.popupCaption).textContent =
       data.name;
-    openPopupImage(evt);
+    openPopupImage();
   };
 }
 
-function addListenersForCard(data) {
-  const template = cardTemplate.querySelector(elementSelectors.card);
-  const card = createCard(data, {
-    template,
+function addCard(data) {
+  return createCard(data, {
+    template: cardTemplate.querySelector(elementSelectors.card),
     titleSelecor: elementSelectors.cardTitle,
     imageSelector: elementSelectors.cardImage,
+    cardDeleteButtonSelector: elementSelectors.cardDeleteButton,
+    cardLikeButtonSelector: elementSelectors.cardLikeButton,
+    cardLikeButtonIsActive: elementSelectors.cardLikeButtonIsActive,
+    onDeleteCard: deleteCard,
+    onLikeCard: likeCard,
+    onClickImageCard: handleClickImage,
   });
-  card
-    .querySelector(elementSelectors.cardDeleteButton)
-    .addEventListener("click", () => {
-      deleteCard(card);
-    });
-  card
-    .querySelector(elementSelectors.cardLikeButton)
-    .addEventListener("click", () => {
-      likeCard(
-        card.querySelector(elementSelectors.cardLikeButton),
-        elementSelectors.cardLikeButtonIsActive,
-      );
-    });
-
-  card
-    .querySelector(elementSelectors.cardImage)
-    .addEventListener("click", handleClickImage(data));
-
-  return card;
 }
 
 function initCards() {
-  cardsPlace.append(...initialCards.map((item) => addListenersForCard(item)));
+  cardsPlace.append(...initialCards.map((item) => addCard(item)));
 }
 
-function initPopup() {
+function initPopups() {
   popupAddNewCard.classList.add(elementSelectors.popupIsAnimated);
   popupEditProfile.classList.add(elementSelectors.popupIsAnimated);
   popupImage.classList.add(elementSelectors.popupIsAnimated);
-  addButton.addEventListener("click", openWindow(popupAddNewCard));
+  addButton.addEventListener("click", openPopup(popupAddNewCard));
   editButton.addEventListener("click", (evt) => {
     // Находим поля формы в DOM;
     const nameInput = document.querySelector(
@@ -119,22 +105,12 @@ function initPopup() {
     ); // Воспользуйтесь инструментом .querySelector()
     nameInput.value = profileTitle.textContent;
     jobInput.value = profileDescription.textContent;
-    openWindow(popupEditProfile)(evt);
+    openPopup(popupEditProfile)(popupImage);
   });
   // Прикрепляем обработчик к форме:
   // он будет следить за событием “submit” - «отправка»
   formEditProfile.addEventListener("submit", handleFormEditProfile);
   formAddCard.addEventListener("submit", handleFormAddCard);
-
-  popupButtonCloses.forEach((element) => {
-    element.addEventListener("click", handlerClosePopup);
-  });
-
-  const cardImages = document.querySelectorAll(elementSelectors.cardImage);
-
-  cardImages.forEach((element) => {
-    element.addEventListener("click", openWindow(popupImage));
-  });
 
   popupButtonCloses.forEach((element) => {
     element.addEventListener("click", handlerClosePopup);
@@ -171,7 +147,7 @@ function handleFormAddCard(evt) {
   );
   const urlInput = document.querySelector(elementSelectors.popupInputTypeUrl);
 
-  const newCard = addListenersForCard({
+  const newCard = addCard({
     name: cardNameInput.value,
     link: urlInput.value,
   });
@@ -189,4 +165,4 @@ document.querySelector(".footer__copyright").innerText =
 initCards();
 
 // @todo: Функция открытия модального окна
-initPopup();
+initPopups();
