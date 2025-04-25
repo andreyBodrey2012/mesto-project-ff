@@ -22,12 +22,6 @@ export function createCard(
   const cardImage = card.querySelector(imageSelector);
 
   const imageCard = ".card__image";
-  const cardImages = document.querySelectorAll(imageCard);
-  const popupImage = document.querySelector(popupTypeImage);
-
-  cardImages.forEach((element) => {
-    element.addEventListener("click", openPopup(popupImage));
-  });
 
   cardImage.src = data.link;
   cardImage.alt = data.name;
@@ -42,9 +36,7 @@ export function createCard(
     );
   });
 
-  card
-    .querySelector(imageSelector)
-    .addEventListener("click", onClickImageCard(data));
+  cardImage.addEventListener("click", onClickImageCard(data));
 
   return card;
 }
