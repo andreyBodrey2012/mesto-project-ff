@@ -7,6 +7,30 @@
   background-size: cover;
   background-position: center;
   margin: 0 29px 0 0;
+  transition: opacity 0.3s ease;
+  opacity: 1;
+  position: relative;
+}
+
+.profile__image:hover {
+  background-color: rgba(0, 0, 0, 0.5);
+  opacity: 0.3;
+  cursor: pointer;
+}
+
+.profile__image-icon {
+  position: absolute;
+  width: 25%;
+  height: 25%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.profile__image:hover .profile__image-icon {
+  opacity: 1;
 }
 
 @media screen and (max-width: 740px) {

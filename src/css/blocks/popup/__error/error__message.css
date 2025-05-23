@@ -1,0 +1,11 @@
+.error__message {
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 100%;
+  color: #FF0000;
+}
+
+.error__border {
+  border-bottom: #FF0000 1px solid;
+}
+

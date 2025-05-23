@@ -1,7 +1,28 @@
 // @todo: Функция создания карточки
-import { openPopup } from "../popup/modal";
+import { closePopup, openPopup } from "../popup/modal";
+import { cohortId, tokenAPI } from "../constants";
+import { deleteCardServer, delereCardLike, addCardLike } from "../api";
 
 const popupTypeImage = ".popup_type_image";
+
+let openPopupDeleteFn;
+let openPopupDeleteCallbackSucces;
+
+const openPopupDelete = (callbackSucces = () => {}) => {
+  if (!openPopupDeleteFn) {
+    document
+      .querySelector('[name="deleteCard"]')
+      .addEventListener("click", () => {
+        openPopupDeleteCallbackSucces();
+        closePopup(document.querySelector(".popup_type_delete"));
+      });
+    openPopupDeleteFn = true;
+  }
+
+  openPopupDeleteCallbackSucces = callbackSucces;
+
+  return openPopup(document.querySelector(".popup_type_delete"))();
+};
 
 export function createCard(
   data,
@@ -12,6 +33,10 @@ export function createCard(
     cardDeleteButtonSelector,
     cardLikeButtonSelector,
     cardLikeButtonIsActive,
+    cardButtonDeleteDisplayNone,
+    cardLikesCount,
+    isOwner,
+    ownerId,
     onDeleteCard,
     onLikeCard,
     onClickImageCard,
@@ -25,14 +50,26 @@ export function createCard(
 
   cardImage.src = data.link;
   cardImage.alt = data.name;
+  if (data.isOwner) {
+    card
+      .querySelector(cardDeleteButtonSelector)
+      .addEventListener("click", () => {
+        openPopupDelete(() => {
+          onDeleteCard(card, data.id);
+        });
+      });
+  } else {
+    card
+      .querySelector(cardDeleteButtonSelector)
+      .classList.add(cardButtonDeleteDisplayNone);
+  }
 
-  card.querySelector(cardDeleteButtonSelector).addEventListener("click", () => {
-    onDeleteCard(card);
-  });
   card.querySelector(cardLikeButtonSelector).addEventListener("click", () => {
     onLikeCard(
       card.querySelector(cardLikeButtonSelector),
       cardLikeButtonIsActive,
+      data.id,
+      data,
     );
   });
 
@@ -42,16 +79,31 @@ export function createCard(
 }
 
 // @todo: Функция удаления карточки
-export function deleteCard(element) {
+export function deleteCard(element, id) {
   if (element && typeof element.remove === "function") {
-    element.remove();
+    deleteCardServer(element, id);
   }
 }
 
-export function likeCard(element, activeClass = "card__like-button_is-active") {
+export function likeCard(
+  element,
+  activeClass = "card__like-button_is-active",
+  id,
+  card,
+) {
   if (element.classList.contains(activeClass)) {
-    element.classList.remove(activeClass);
+    delereCardLike(
+      element,
+      (activeClass = "card__like-button_is-active"),
+      id,
+      card,
+    );
   } else {
-    element.classList.add(activeClass);
+    addCardLike(
+      element,
+      (activeClass = "card__like-button_is-active"),
+      id,
+      card,
+    );
   }
 }
