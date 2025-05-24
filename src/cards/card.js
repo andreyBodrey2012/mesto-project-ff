@@ -1,7 +1,7 @@
 // @todo: Функция создания карточки
 import { closePopup, openPopup } from "../popup/modal";
 import { cohortId, tokenAPI } from "../constants";
-import { deleteCardServer, delereCardLike, addCardLike } from "../api";
+import { deleteCardServer, deleteCardLike, addCardLike } from "../api";
 
 const popupTypeImage = ".popup_type_image";
 
@@ -81,7 +81,8 @@ export function createCard(
 // @todo: Функция удаления карточки
 export function deleteCard(element, id) {
   if (element && typeof element.remove === "function") {
-    deleteCardServer(element, id);
+    deleteCardServer(id);
+    element.remove();
   }
 }
 
@@ -92,18 +93,20 @@ export function likeCard(
   card,
 ) {
   if (element.classList.contains(activeClass)) {
-    delereCardLike(
-      element,
-      (activeClass = "card__like-button_is-active"),
-      id,
-      card,
-    );
+    deleteCardLike(id);
+    const countLikes = card.likes;
+    const likesContainer = document.querySelector(".likes__count");
+    if (likesContainer != null) {
+      likesContainer.textContent = countLikes.length;
+    }
+    element.classList.remove(activeClass);
   } else {
-    addCardLike(
-      element,
-      (activeClass = "card__like-button_is-active"),
-      id,
-      card,
-    );
+    addCardLike(id);
+    const countLikes = card.likes;
+    const likesContainer = document.querySelector(".likes__count");
+    if (likesContainer != null) {
+      likesContainer.textContent = countLikes.length;
+    }
+    element.classList.add(activeClass);
   }
 }

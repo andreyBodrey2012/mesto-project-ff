@@ -1,12 +1,22 @@
 import { createCard, deleteCard, likeCard } from "./cards/card";
 import { openPopup, handlerClosePopup, closePopup } from "./popup/modal";
-import { cohortId, tokenAPI } from "./constants"
-import { fetchProfileApi, fetchCards, editAvatarApi, editProfileApi, serverAddCard } from "./api"
+import { cohortId, tokenAPI } from "./constants";
+import {
+  fetchProfileApi,
+  fetchCards,
+  editAvatarApi,
+  editProfileApi,
+  serverAddCard,
+} from "./api";
 import "./validation";
 import "./css/index.css";
-
+import { enableValidation } from "./validation"
 
 let userInfo = {};
+
+document.addEventListener("DOMContentLoaded", function() {
+  enableValidation();
+});
 
 const elementSelectors = {
   // cards
@@ -80,16 +90,22 @@ const popupImage = document.querySelector(elementSelectors.popupTypeImage);
 const formEditProfile = document.querySelector(
   elementSelectors.popupFormEditProfile,
 );
-const popupEditAvatar = document.querySelector(elementSelectors.popupEditAvatar)
+const popupEditAvatar = document.querySelector(
+  elementSelectors.popupEditAvatar,
+);
 const avatarButton = document.querySelector(elementSelectors.avatarImg);
-const popupInputAvatar = document.querySelector(elementSelectors.popupFormEditAvatar);
+const popupInputAvatar = document.querySelector(
+  elementSelectors.popupFormEditAvatar,
+);
 const formAddCard = document.querySelector(elementSelectors.popupFormNewPlace);
 const profileTitle = document.querySelector(elementSelectors.profileTitle);
 const profileDescription = document.querySelector(
   elementSelectors.profileDescription,
 );
 const avatarImg = document.querySelector(elementSelectors.avatarImg);
-const avatarInput = document.querySelector(elementSelectors.popupInputTypeAvatar);
+const avatarInput = document.querySelector(
+  elementSelectors.popupInputTypeAvatar,
+);
 
 const openPopupImage = openPopup(popupImage);
 
@@ -144,26 +160,34 @@ function displayCards(cards) {
     const countLikes = card.likes.length;
     const likesContainer = document.querySelector(elementSelectors.likesCount);
 
-    if (card.likes.find(({_id}) => _id === userInfo.id)) {
-      document.querySelector(elementSelectors.cardLikeButton).classList.add(elementSelectors.cardLikeButtonIsActive);
+    if (card.likes.find(({ _id }) => _id === userInfo.id)) {
+      document
+        .querySelector(elementSelectors.cardLikeButton)
+        .classList.add(elementSelectors.cardLikeButtonIsActive);
     }
-    
-    likesContainer.textContent = countLikes
+
+    likesContainer.textContent = countLikes;
     if (likesContainer !== null) {
-      likesContainer.textContent = countLikes
-    };
+      likesContainer.textContent = countLikes;
+    }
   });
 }
 
 function loadProfileData() {
   fetchProfileApi().then((user) => {
+      const userInfo = {
+        name: user.name,
+        about: user.about,
+        avatar: user.avatar,
+        id: user._id,
+      };
+      return userInfo;
+    }).then((user) => {
     if (user.name) {
-      profileTitle.textContent =
-        user.name;
+      profileTitle.textContent = user.name;
     }
-    if (user.description) {
-      profileDescription.textContent =
-        user.description;
+    if (user.about) {
+      profileDescription.textContent = user.about;
     }
     if (user.avatar) {
       avatarImg.style.backgroundImage = `url(${user.avatar})`;
@@ -173,7 +197,16 @@ function loadProfileData() {
 }
 
 function initCards() {
-  Promise.all([fetchCards()])
+  Promise.all([fetchCards().then((data) => {
+      const cards = data.map((card) => ({
+        name: card.name,
+        link: card.link,
+        likes: card.likes,
+        ownerId: card.owner._id,
+        id: card._id,
+      }));
+      return cards;
+    })])
     .then(([cards]) => {
       displayCards(cards);
     })
@@ -186,7 +219,7 @@ function initPopups() {
   popupAddNewCard.classList.add(elementSelectors.popupIsAnimated);
   popupEditProfile.classList.add(elementSelectors.popupIsAnimated);
   popupEditAvatar.classList.add(elementSelectors.popupIsAnimated);
-  avatarButton.addEventListener("click", openPopup(popupEditAvatar))
+  avatarButton.addEventListener("click", openPopup(popupEditAvatar));
   popupImage.classList.add(elementSelectors.popupIsAnimated);
   deletePopup.classList.add(elementSelectors.popupIsAnimated);
   addButton.addEventListener("click", openPopup(popupAddNewCard));
@@ -215,13 +248,15 @@ function initPopups() {
 }
 
 function handleFormEditAvatar(evt) {
-  evt.preventDefault()
+  evt.preventDefault();
 
-  const avatarInput = document.querySelector(elementSelectors.popupInputTypeAvatar);
+  const avatarInput = document.querySelector(
+    elementSelectors.popupInputTypeAvatar,
+  );
   const avatarImg = document.querySelector(elementSelectors.avatarImg);
 
   editAvatarApi(avatarInput, avatarImg);
-  closePopup(popupEditAvatar)
+  closePopup(popupEditAvatar);
 }
 
 function handleFormEditProfile(evt) {
@@ -234,8 +269,11 @@ function handleFormEditProfile(evt) {
   const profileJobValue = jobInput.value;
   const profileNameValue = nameInput.value;
 
-  editProfileApi(profileJobValue, profileNameValue, profileTitle, profileDescription)
-  closePopup(popupEditProfile)
+  editProfileApi(
+    profileJobValue,
+    profileNameValue,
+  )
+  closePopup(popupEditProfile);
 }
 
 function handleFormAddCard(evt) {
@@ -260,6 +298,8 @@ function handleFormAddCard(evt) {
     closePopup(evt.target.closest(elementSelectors.popup));
   });
 }
+
+const formsSelector = [elementSelectors.popupFormEditProfile, elementSelectors.popupFormNewPlace, elementSelectors.popupFormEditAvatar];
 
 document.querySelector(".footer__copyright").innerText =
   `© ${new Date().getFullYear()} Mesto Russia`;

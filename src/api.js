@@ -1,85 +1,42 @@
 import { tokenAPI, cohortId } from "./constants";
 
+// logic
+
+function handleResponse(response) {
+  if (response.status !== 200) {
+    return Promise.reject(new Error(`Ошибка: ${response.statusText}`));
+  }
+  console.log("Операция прошла успешно.");
+  return response.json();
+}
+
 // card.js
 
-export const deleteCardServer = (element, id) => {
+export const deleteCardServer = (id) => {
   fetch(`https://nomoreparties.co/v1/${cohortId}/cards/${id}`, {
     method: "DELETE",
     headers: {
       Authorization: tokenAPI,
     },
-  })
-    .then((response) => {
-      if (response.ok) {
-        console.log("Карточка успешно удалена.");
-        element.remove();
-      } else {
-        console.error("Ошибка при удалении карточки:", response.statusText);
-      }
-    })
-    .catch((error) => {
-      console.error("Произошла ошибка:", error);
-    });
+  }).then(handleResponse);
 };
 
-export const delereCardLike = (
-  element,
-  activeClass = "card__like-button_is-active",
-  id,
-  card,
-) => {
+export const deleteCardLike = (id) => {
   return fetch(`https://nomoreparties.co/v1/${cohortId}/cards/likes/${id}`, {
     method: "DELETE",
     headers: {
       Authorization: tokenAPI,
     },
-  })
-    .then((response) => {
-      if (response.ok) {
-        console.log("Лайк удалён.");
-        const countLikes = card.likes;
-        const likesContainer = document.querySelector(".likes__count");
-        if (likesContainer != null) {
-          likesContainer.textContent = countLikes.length;
-        }
-        element.classList.remove(activeClass);
-      } else {
-        console.error("Ошибка при удалении лайка.");
-      }
-    })
-    .catch((error) => {
-      console.error("Произошла ошибка:", error);
-    });
+  }).then(handleResponse);
 };
 
-export const addCardLike = (
-  element,
-  activeClass = "card__like-button_is-active",
-  id,
-  card,
-) => {
+export const addCardLike = (id) => {
   return fetch(`https://nomoreparties.co/v1/${cohortId}/cards/likes/${id}`, {
     method: "PUT",
     headers: {
       Authorization: tokenAPI,
     },
-  })
-    .then((response) => {
-      if (response.ok) {
-        console.log("Лайк поставлен.");
-        const countLikes = card.likes;
-        const likesContainer = document.querySelector(".likes__count");
-        if (likesContainer != null) {
-          likesContainer.textContent = countLikes.length;
-        }
-        element.classList.add(activeClass);
-      } else {
-        console.error("Ошибка при установке лайка.");
-      }
-    })
-    .catch((error) => {
-      console.error("Произошла ошибка:", error);
-    });
+  }).then(handleResponse);
 };
 
 // index.js
@@ -90,22 +47,7 @@ export const fetchProfileApi = () => {
     headers: {
       Authorization: tokenAPI,
     },
-  })
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error("Не удалось получить информацию о пользователе");
-      }
-      return response.json();
-    })
-    .then((user) => {
-      const userInfo = {
-        name: user.name,
-        description: user.about,
-        avatar: user.avatar,
-        id: user._id,
-      };
-      return userInfo;
-    });
+  }).then(handleResponse);
 };
 
 export const fetchCards = () => {
@@ -114,27 +56,11 @@ export const fetchCards = () => {
     headers: {
       Authorization: tokenAPI,
     },
-  })
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error("Не удалось получить карточки");
-      }
-      return response.json();
-    })
-    .then((data) => {
-      const cards = data.map((card) => ({
-        name: card.name,
-        link: card.link,
-        likes: card.likes,
-        ownerId: card.owner._id,
-        id: card._id,
-      }));
-      return cards;
-    });
+  }).then(handleResponse);
 };
 
 export const editAvatarApi = (avatarInput, avatarImg) => {
-  fetch(`https://nomoreparties.co/v1/${cohortId}/users/me/avatar`, {
+  return fetch(`https://nomoreparties.co/v1/${cohortId}/users/me/avatar`, {
     method: "PATCH",
     headers: {
       authorization: tokenAPI,
@@ -142,24 +68,12 @@ export const editAvatarApi = (avatarInput, avatarImg) => {
     },
     body: JSON.stringify({
       avatar: avatarInput.value,
-    })
-  })
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error("Ошибка при обновлении данных");
-      }
-      return response.json();
-    })
-    .then((data) => {
-      avatarImg.style.backgroundImage = `url(${data.avatar})`
-    })
-    .catch((error) => {
-      console.error("Ошибка:", error);
-    });
+    }),
+  }).then(handleResponse);
 };
 
-export const editProfileApi = (profileJobValue, profileNameValue, profileTitle, profileDescription) => {
-  fetch(`https://nomoreparties.co/v1/${cohortId}/users/me`, {
+export const editProfileApi = (profileJobValue, profileNameValue) => {
+  return fetch(`https://nomoreparties.co/v1/${cohortId}/users/me`, {
     method: "PATCH",
     headers: {
       authorization: tokenAPI,
@@ -169,20 +83,7 @@ export const editProfileApi = (profileJobValue, profileNameValue, profileTitle, 
       name: profileNameValue,
       about: profileJobValue,
     }),
-  })
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error("Ошибка при обновлении данных");
-      }
-      return response.json();
-    })
-    .then((data) => {
-      profileTitle.textContent = data.name;
-      profileDescription.textContent = data.about;
-    })
-    .catch((error) => {
-      console.error("Ошибка:", error);
-    });
+  }).then(handleResponse);
 };
 
 export const serverAddCard = (name, link) => {
@@ -196,14 +97,5 @@ export const serverAddCard = (name, link) => {
       name: name,
       link: link,
     }),
-  })
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error("Ошибка при добавлении карточки: " + response.status);
-      }
-      return response.json();
-    })
-    .catch((error) => {
-      console.error("Ошибка:", error);
-    });
-}
+  }).then(handleResponse);
+};

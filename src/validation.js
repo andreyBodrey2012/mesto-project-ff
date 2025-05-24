@@ -18,7 +18,11 @@ const elementSelectors = {
   avatarError: '[name="avatarError"]',
   avatarButton: "[name='saveAvatar']",
   avatarInput: ".popup__input_type_url_avatar",
+  errMes: "error__message",
+  popupInput: ".popup__input",
 };
+
+// validation editProfile
 
 const addButton = document.querySelector(elementSelectors.profileAddButton);
 const editButton = document.querySelector(elementSelectors.profileEditButton);
@@ -71,15 +75,7 @@ function validateFormProfile() {
   saveButtonProfile.disabled = !isValid;
 }
 
-nameInput.addEventListener("input", validateFormProfile);
-editButton.addEventListener("click", () => {
-  nameError.textContent = "";
-  descriptionError.textContent = "";
-  nameInput.classList.remove(elementSelectors.errorBorder);
-  descriptionInput.classList.remove(elementSelectors.errorBorder);
-  saveButtonProfile.disabled = false;
-});
-descriptionInput.addEventListener("input", validateFormProfile);
+// validation addCard
 
 const titleInput = document.querySelector(
   elementSelectors.popupInputTypeCardName,
@@ -121,22 +117,14 @@ function validateFormAddCard() {
   saveButtonAddCard.disabled = !isValid;
 }
 
-addButton.addEventListener("click", () => {
-  titleError.textContent = "";
-  urlError.textContent = "";
-  titleInput.classList.remove(elementSelectors.errorBorder);
-  urlInput.classList.remove(elementSelectors.errorBorder);
-  saveButtonAddCard.disabled = true;
-});
-titleInput.addEventListener("input", validateFormAddCard);
-urlInput.addEventListener("input", validateFormAddCard);
+// validation editAvatar
 
 const avatarImg = document.querySelector(elementSelectors.avatarImg);
 const avatarErr = document.querySelector(elementSelectors.avatarError);
 const avatarButton = document.querySelector(elementSelectors.avatarButton);
 const avatarInput = document.querySelector(elementSelectors.avatarInput);
 
-function validateFormEditAvatar() { 
+function validateFormEditAvatar() {
   const avatrValue = avatarInput.value;
   let isValid = true;
 
@@ -153,8 +141,39 @@ function validateFormEditAvatar() {
   avatarButton.disabled = !isValid;
 }
 
-avatarImg.addEventListener("click", () => {
-  avatarErr.textContent = "";
-  avatarInput.classList.remove(elementSelectors.errorBorder);
-});
-avatarInput.addEventListener("input", validateFormEditAvatar);
+// add event for form
+
+export function enableValidation() {
+  // edit profile
+  nameInput.addEventListener("input", validateFormProfile);
+  descriptionInput.addEventListener("input", validateFormProfile);
+  editButton.addEventListener("click", () => clearValidation(nameError, nameInput));
+  editButton.addEventListener(
+    "click",
+    () => clearValidation(descriptionError, descriptionInput),
+  );
+  // add card
+  titleInput.addEventListener("input", validateFormAddCard);
+  urlInput.addEventListener("input", validateFormAddCard);
+  addButton.addEventListener("click", () => clearValidation(titleError, titleInput));
+  addButton.addEventListener("click", () => clearValidation(urlError, urlInput));
+  // edit avatar
+  avatarInput.addEventListener("input", validateFormEditAvatar);
+  avatarImg.addEventListener("click", () => clearValidation(avatarErr, avatarInput));
+}
+
+function clearValidation(errMes, formInput) {
+  if (
+    errMes === nameError ||
+    errMes === descriptionError ||
+    errMes === titleError
+  ) {
+    formInput.classList.remove(elementSelectors.errorBorder);
+    errMes.textContent = "";
+    saveButtonProfile.disabled = false;
+  }
+  if (errMes === titleError || errMes === avatarErr) {
+    saveButtonAddCard.disabled = true;
+  }
+}
+
