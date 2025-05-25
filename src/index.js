@@ -1,6 +1,6 @@
 import { createCard, deleteCard, likeCard } from "./cards/card";
 import { openPopup, handlerClosePopup, closePopup } from "./popup/modal";
-import { cohortId, tokenAPI } from "./constants";
+import { validationConfig } from "./constants";
 import {
   fetchProfileApi,
   fetchCards,
@@ -10,12 +10,12 @@ import {
 } from "./api";
 import "./validation";
 import "./css/index.css";
-import { enableValidation } from "./validation"
+import { enableValidation } from "./validation";
 
 let userInfo = {};
 
-document.addEventListener("DOMContentLoaded", function() {
-  enableValidation();
+document.addEventListener("DOMContentLoaded", function () {
+  enableValidation(validationConfig);
 });
 
 const elementSelectors = {
@@ -62,6 +62,7 @@ const elementSelectors = {
   popupInputTypeAvatar: ".popup__input_type_url_avatar",
   // errors
   popupButton: ".popup__button",
+  popupError: ".error__message",
   popupNameInputErr: "[name='nameError']",
   popupDescInputErr: "[name='descriptionError']",
   popupTitleInputErr: "[name='titleError']",
@@ -174,7 +175,8 @@ function displayCards(cards) {
 }
 
 function loadProfileData() {
-  fetchProfileApi().then((user) => {
+  fetchProfileApi()
+    .then((user) => {
       const userInfo = {
         name: user.name,
         about: user.about,
@@ -182,22 +184,24 @@ function loadProfileData() {
         id: user._id,
       };
       return userInfo;
-    }).then((user) => {
-    if (user.name) {
-      profileTitle.textContent = user.name;
-    }
-    if (user.about) {
-      profileDescription.textContent = user.about;
-    }
-    if (user.avatar) {
-      avatarImg.style.backgroundImage = `url(${user.avatar})`;
-    }
-    userInfo = { ...user };
-  });
+    })
+    .then((user) => {
+      if (user.name) {
+        profileTitle.textContent = user.name;
+      }
+      if (user.about) {
+        profileDescription.textContent = user.about;
+      }
+      if (user.avatar) {
+        avatarImg.style.backgroundImage = `url(${user.avatar})`;
+      }
+      userInfo = { ...user };
+    });
 }
 
 function initCards() {
-  Promise.all([fetchCards().then((data) => {
+  Promise.all([
+    fetchCards().then((data) => {
       const cards = data.map((card) => ({
         name: card.name,
         link: card.link,
@@ -206,7 +210,8 @@ function initCards() {
         id: card._id,
       }));
       return cards;
-    })])
+    }),
+  ])
     .then(([cards]) => {
       displayCards(cards);
     })
@@ -269,10 +274,7 @@ function handleFormEditProfile(evt) {
   const profileJobValue = jobInput.value;
   const profileNameValue = nameInput.value;
 
-  editProfileApi(
-    profileJobValue,
-    profileNameValue,
-  )
+  editProfileApi(profileJobValue, profileNameValue);
   closePopup(popupEditProfile);
 }
 
@@ -299,7 +301,11 @@ function handleFormAddCard(evt) {
   });
 }
 
-const formsSelector = [elementSelectors.popupFormEditProfile, elementSelectors.popupFormNewPlace, elementSelectors.popupFormEditAvatar];
+const formsSelector = [
+  elementSelectors.popupFormEditProfile,
+  elementSelectors.popupFormNewPlace,
+  elementSelectors.popupFormEditAvatar,
+];
 
 document.querySelector(".footer__copyright").innerText =
   `© ${new Date().getFullYear()} Mesto Russia`;
