@@ -1,4 +1,4 @@
-import { tokenAPI, cohortId } from "./constants";
+import { tokenAPI, cohortId } from "../constants";
 
 // logic
 
@@ -13,7 +13,7 @@ function handleResponse(response) {
 // card.js
 
 export const deleteCardServer = (id) => {
-  fetch(`https://nomoreparties.co/v1/${cohortId}/cards/${id}`, {
+  return fetch(`https://nomoreparties.co/v1/${cohortId}/cards/${id}`, {
     method: "DELETE",
     headers: {
       Authorization: tokenAPI,
@@ -60,23 +60,32 @@ export const fetchCards = () => {
 };
 
 export const editAvatarApi = (avatarInput, avatarImg) => {
+  if (!avatarInput.value) {
+    return Promise.reject(new Error("URL аватара не может быть пустым."));
+  }
+
+  avatarImg.style.backgroundImage = `url(${avatarImg.value})`;
+
   return fetch(`https://nomoreparties.co/v1/${cohortId}/users/me/avatar`, {
     method: "PATCH",
     headers: {
-      authorization: tokenAPI,
+      Authorization: tokenAPI,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
       avatar: avatarInput.value,
     }),
-  }).then(handleResponse);
+  }).then(handleResponse)
+    .catch(error => {
+      console.error("Ошибка при редактировании аватара:", error);
+    });
 };
 
 export const editProfileApi = (profileJobValue, profileNameValue) => {
   return fetch(`https://nomoreparties.co/v1/${cohortId}/users/me`, {
     method: "PATCH",
     headers: {
-      authorization: tokenAPI,
+      Authorization: tokenAPI,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({

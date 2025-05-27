@@ -1,4 +1,4 @@
-import { clearValidation } from "../validation";
+import { clearValidation } from "./validation";
 import { validationConfig } from "../constants"
 
 const defaultClassOpened = "popup_is-opened";
@@ -15,7 +15,6 @@ export function closePopup(element, classOpened = defaultClassOpened) {
 export function handlerClosePopup(evt) {
   if (evt.currentTarget === evt.target) {
     closePopup(evt.target.closest(defautPopupSelector));
-    // clearValidation()
   }
 }
 

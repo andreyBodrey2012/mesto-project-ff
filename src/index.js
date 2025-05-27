@@ -1,5 +1,5 @@
-import { createCard, deleteCard, likeCard } from "./cards/card";
-import { openPopup, handlerClosePopup, closePopup } from "./popup/modal";
+import { createCard, deleteCard, likeCard } from "./components/card";
+import { openPopup, handlerClosePopup, closePopup } from "./components/modal";
 import { validationConfig } from "./constants";
 import {
   fetchProfileApi,
@@ -7,10 +7,10 @@ import {
   editAvatarApi,
   editProfileApi,
   serverAddCard,
-} from "./api";
-import "./validation";
+} from "./components/api";
+import "./components/validation";
 import "./css/index.css";
-import { enableValidation } from "./validation";
+import { enableValidation } from "./components/validation";
 
 let userInfo = {};
 
@@ -110,6 +110,25 @@ const avatarInput = document.querySelector(
 
 const openPopupImage = openPopup(popupImage);
 
+let openPopupDeleteFn;
+let openPopupDeleteCallbackSucces;
+
+const handleOpenPopupDelete = (callbackSucces = () => {}) => {
+  if (!openPopupDeleteFn) {
+    document
+      .querySelector('[name="deleteCard"]')
+      .addEventListener("click", () => {
+        openPopupDeleteCallbackSucces();
+        closePopup(document.querySelector(".popup_type_delete"));
+      });
+    openPopupDeleteFn = true;
+  }
+
+  openPopupDeleteCallbackSucces = callbackSucces;
+
+  return openPopup(document.querySelector(".popup_type_delete"))();
+};
+
 function handleClickImage(data) {
   return () => {
     document.querySelector(elementSelectors.popupImage).src = data.link;
@@ -128,11 +147,11 @@ function addCard(data) {
     cardLikeButtonSelector: elementSelectors.cardLikeButton,
     cardLikeButtonIsActive: elementSelectors.cardLikeButtonIsActive,
     cardButtonDeleteDisplayNone: elementSelectors.cardButtonDeleteDisplayNone,
-    cardLikesCount: data.likes,
-    ownerId: userInfo.id,
+    cardLikesCountSelector: elementSelectors.likesCount,
     onDeleteCard: deleteCard,
     onLikeCard: likeCard,
     onClickImageCard: handleClickImage,
+    onPopupDelete: handleOpenPopupDelete,
   });
 }
 
@@ -153,24 +172,22 @@ function displayCards(cards) {
       name: card.name,
       link: card.link,
       likes: card.likes,
+      myId: userInfo.id,
       isOwner: card.ownerId === userInfo.id,
     });
 
-    cardsPlace.prepend(serverCard);
+    cardsContainer.appendChild(serverCard);
 
-    const countLikes = card.likes.length;
-    const likesContainer = document.querySelector(elementSelectors.likesCount);
+    // const countLikes = card.likes.length || 0;
+    // const likesContainer = serverCard.querySelector(elementSelectors.likesCount);
 
-    if (card.likes.find(({ _id }) => _id === userInfo.id)) {
-      document
-        .querySelector(elementSelectors.cardLikeButton)
-        .classList.add(elementSelectors.cardLikeButtonIsActive);
-    }
+    // if (card.likes.find(({ _id }) => _id === userInfo.id)) {
+    //   serverCard.querySelector(elementSelectors.cardLikeButton).classList.add(elementSelectors.cardLikeButtonIsActive);
+    // }
 
-    likesContainer.textContent = countLikes;
-    if (likesContainer !== null) {
-      likesContainer.textContent = countLikes;
-    }
+    // if (likesContainer !== null) {
+    //   likesContainer.textContent = countLikes;
+    // }
   });
 }
 
@@ -196,23 +213,35 @@ function loadProfileData() {
         avatarImg.style.backgroundImage = `url(${user.avatar})`;
       }
       userInfo = { ...user };
+    }).catch(error => {
+      console.error("Ошибка при загрузки профиля:", error);
     });
 }
 
 function initCards() {
   Promise.all([
+    fetchProfileApi(),
     fetchCards().then((data) => {
-      const cards = data.map((card) => ({
+      return data.map((card) => ({
         name: card.name,
         link: card.link,
         likes: card.likes,
         ownerId: card.owner._id,
         id: card._id,
       }));
-      return cards;
     }),
   ])
-    .then(([cards]) => {
+    .then(([userProfile, cards]) => {
+      const userInfo = {
+        name: userProfile.name,
+        about: userProfile.about,
+        avatar: userProfile.avatar,
+        id: userProfile._id,
+      };
+      profileTitle.textContent = userInfo.name;
+      profileDescription.textContent = userInfo.about;
+      avatarImg.style.backgroundImage = `url(${userInfo.avatar})`;
+
       displayCards(cards);
     })
     .catch((error) => {
@@ -255,50 +284,59 @@ function initPopups() {
 function handleFormEditAvatar(evt) {
   evt.preventDefault();
 
-  const avatarInput = document.querySelector(
-    elementSelectors.popupInputTypeAvatar,
-  );
+  const avatarInput = document.querySelector(elementSelectors.popupInputTypeAvatar);
   const avatarImg = document.querySelector(elementSelectors.avatarImg);
 
-  editAvatarApi(avatarInput, avatarImg);
+  editAvatarApi(avatarInput, avatarImg)
+    .then(() => {
+      loadProfileData();
+    })
+    .catch(error => {
+      console.error("Ошибка при редактировании аватара:", error);
+    });
   closePopup(popupEditAvatar);
 }
 
 function handleFormEditProfile(evt) {
   evt.preventDefault();
-
   const nameInput = document.querySelector(elementSelectors.popupInputTypeName);
-  const jobInput = document.querySelector(
-    elementSelectors.popupInputTypeDescription,
-  );
-  const profileJobValue = jobInput.value;
-  const profileNameValue = nameInput.value;
+  const jobInput = document.querySelector(elementSelectors.popupInputTypeDescription);
 
-  editProfileApi(profileJobValue, profileNameValue);
-  closePopup(popupEditProfile);
+  editProfileApi(jobInput.value, nameInput.value)
+    .then(() => {
+      profileTitle.textContent = nameInput.value;
+      profileDescription.textContent = jobInput.value;
+      closePopup(popupEditProfile)
+      loadProfileData();
+    })
+    .catch(error => {
+      console.error("Ошибка при редактировании профиля:", error);
+    });
 }
 
 function handleFormAddCard(evt) {
   evt.preventDefault();
-  const cardNameInput = document.querySelector(
-    elementSelectors.popupInputTypeCardName,
-  );
+  const cardNameInput = document.querySelector(elementSelectors.popupInputTypeCardName);
   const urlInput = document.querySelector(elementSelectors.popupInputTypeUrl);
 
-  serverAddCard(cardNameInput.value, urlInput.value).then((data) => {
-    const newCard = addCard({
-      id: data._id,
-      name: data.name,
-      likes: data.likes,
-      link: data.link,
-      isOwner: data.owner._id === userInfo.id,
+  serverAddCard(cardNameInput.value, urlInput.value)
+    .then(data => {
+      const newCard = addCard({
+        id: data._id,
+        name: data.name,
+        likes: data.likes,
+        link: data.link,
+        myId: userInfo.id,
+        isOwner: data.owner._id === userInfo.id,
+      });
+      cardsPlace.prepend(newCard);
+      cardNameInput.value = "";
+      urlInput.value = "";
+      closePopup(evt.target.closest(elementSelectors.popup));
+    })
+    .catch(error => {
+      console.error("Ошибка при добавлении карточки:", error);
     });
-    cardsPlace.prepend(newCard);
-
-    cardNameInput.value = "";
-    urlInput.value = "";
-    closePopup(evt.target.closest(elementSelectors.popup));
-  });
 }
 
 const formsSelector = [

@@ -44,7 +44,9 @@ export function enableValidation(config) {
 export function clearValidation(form, config) {
   const inputs = Array.from(form.querySelectorAll(config.inputSelector));
   const button = form.querySelector('button[type=submit]');
-  button.disabled = false;
+  if (button) {
+    button.disabled = false;
+  }
   inputs.forEach((input) => {
     hideError(input, config);
   });
