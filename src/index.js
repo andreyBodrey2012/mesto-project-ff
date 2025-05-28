@@ -10,7 +10,7 @@ import {
 } from "./components/api";
 import "./components/validation";
 import "./css/index.css";
-import { enableValidation } from "./components/validation";
+import { enableValidation, clearValidation } from "./components/validation";
 
 let userInfo = {};
 
@@ -132,6 +132,7 @@ const handleOpenPopupDelete = (callbackSucces = () => {}) => {
 function handleClickImage(data) {
   return () => {
     document.querySelector(elementSelectors.popupImage).src = data.link;
+    document.querySelector(elementSelectors.popupImage).alt = data.name
     document.querySelector(elementSelectors.popupCaption).textContent =
       data.name;
     openPopupImage();
@@ -177,22 +178,11 @@ function displayCards(cards) {
     });
 
     cardsContainer.appendChild(serverCard);
-
-    // const countLikes = card.likes.length || 0;
-    // const likesContainer = serverCard.querySelector(elementSelectors.likesCount);
-
-    // if (card.likes.find(({ _id }) => _id === userInfo.id)) {
-    //   serverCard.querySelector(elementSelectors.cardLikeButton).classList.add(elementSelectors.cardLikeButtonIsActive);
-    // }
-
-    // if (likesContainer !== null) {
-    //   likesContainer.textContent = countLikes;
-    // }
   });
 }
 
 function loadProfileData() {
-  fetchProfileApi()
+  return fetchProfileApi()
     .then((user) => {
       const userInfo = {
         name: user.name,
@@ -220,7 +210,6 @@ function loadProfileData() {
 
 function initCards() {
   Promise.all([
-    fetchProfileApi(),
     fetchCards().then((data) => {
       return data.map((card) => ({
         name: card.name,
@@ -231,13 +220,7 @@ function initCards() {
       }));
     }),
   ])
-    .then(([userProfile, cards]) => {
-      const userInfo = {
-        name: userProfile.name,
-        about: userProfile.about,
-        avatar: userProfile.avatar,
-        id: userProfile._id,
-      };
+    .then(([cards]) => {
       profileTitle.textContent = userInfo.name;
       profileDescription.textContent = userInfo.about;
       avatarImg.style.backgroundImage = `url(${userInfo.avatar})`;
@@ -256,22 +239,17 @@ function initPopups() {
   avatarButton.addEventListener("click", openPopup(popupEditAvatar));
   popupImage.classList.add(elementSelectors.popupIsAnimated);
   deletePopup.classList.add(elementSelectors.popupIsAnimated);
-  addButton.addEventListener("click", openPopup(popupAddNewCard));
-  // deleteButton.addEventListener("click", () => openPopup(deletePopup));
+
+  addButton.addEventListener("click", openPopup(popupAddNewCard))
+
   editButton.addEventListener("click", (evt) => {
-    // Находим поля формы в DOM;
-    const nameInput = document.querySelector(
-      elementSelectors.popupInputTypeName,
-    ); // Воспользуйтесь инструментом .querySelector()
-    const jobInput = document.querySelector(
-      elementSelectors.popupInputTypeDescription,
-    ); // Воспользуйтесь инструментом .querySelector()
+    const nameInput = document.querySelector(elementSelectors.popupInputTypeName);
+    const jobInput = document.querySelector(elementSelectors.popupInputTypeDescription);
     nameInput.value = profileTitle.textContent;
     jobInput.value = profileDescription.textContent;
     openPopup(popupEditProfile)(popupImage);
   });
-  // Прикрепляем обработчик к форме:
-  // он будет следить за событием “submit” - «отправка»,
+
   popupInputAvatar.addEventListener("submit", handleFormEditAvatar);
   formEditProfile.addEventListener("submit", handleFormEditProfile);
   formAddCard.addEventListener("submit", handleFormAddCard);
@@ -289,12 +267,11 @@ function handleFormEditAvatar(evt) {
 
   editAvatarApi(avatarInput, avatarImg)
     .then(() => {
-      loadProfileData();
+      closePopup(popupEditAvatar);
     })
     .catch(error => {
       console.error("Ошибка при редактировании аватара:", error);
     });
-  closePopup(popupEditAvatar);
 }
 
 function handleFormEditProfile(evt) {
@@ -307,7 +284,6 @@ function handleFormEditProfile(evt) {
       profileTitle.textContent = nameInput.value;
       profileDescription.textContent = jobInput.value;
       closePopup(popupEditProfile)
-      loadProfileData();
     })
     .catch(error => {
       console.error("Ошибка при редактировании профиля:", error);
@@ -330,8 +306,12 @@ function handleFormAddCard(evt) {
         isOwner: data.owner._id === userInfo.id,
       });
       cardsPlace.prepend(newCard);
+      
       cardNameInput.value = "";
       urlInput.value = "";
+      
+      clearValidation(formAddCard, validationConfig);
+
       closePopup(evt.target.closest(elementSelectors.popup));
     })
     .catch(error => {
@@ -339,21 +319,15 @@ function handleFormAddCard(evt) {
     });
 }
 
-const formsSelector = [
-  elementSelectors.popupFormEditProfile,
-  elementSelectors.popupFormNewPlace,
-  elementSelectors.popupFormEditAvatar,
-];
-
 document.querySelector(".footer__copyright").innerText =
   `© ${new Date().getFullYear()} Mesto Russia`;
 
 window.addEventListener("load", () => {
-  loadProfileData();
+  loadProfileData().then(() => {
+    // @todo: Вывести карточки на страницу
+    initCards();
 
-  // @todo: Вывести карточки на страницу
-  initCards();
-
-  // @todo: Функция открытия модального окна
-  initPopups();
+    // @todo: Функция открытия модального окна
+    initPopups();
+  });
 });

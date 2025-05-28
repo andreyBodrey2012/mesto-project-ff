@@ -1,5 +1,4 @@
 // @todo: Функция создания карточки
-import { closePopup, openPopup } from "./modal";
 import { deleteCardServer, deleteCardLike, addCardLike } from "./api";
 
 export function createCard(

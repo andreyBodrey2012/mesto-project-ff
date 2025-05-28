@@ -9,7 +9,6 @@ export function closePopup(element, classOpened = defaultClassOpened) {
   element.classList.remove(classOpened);
   element.removeEventListener("click", handlerClosePopup);
   document.removeEventListener("keydown", handlerKeyClosePopup);
-  clearValidation(element, validationConfig)
 }
 
 export function handlerClosePopup(evt) {
@@ -25,6 +24,10 @@ function handlerKeyClosePopup(evt) {
 }
 
 export function openPopup(element, classOpened = defaultClassOpened) {
+  if (element.querySelector(".popup__form") !== null) {
+    clearValidation(element, validationConfig);
+  }
+
   return () => {
     element.classList.add(classOpened);
     element.addEventListener("click", handlerClosePopup);
