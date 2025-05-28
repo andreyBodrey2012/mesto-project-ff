@@ -6,7 +6,6 @@ function handleResponse(response) {
   if (response.status !== 200) {
     return Promise.reject(new Error(`Ошибка: ${response.statusText}`));
   }
-  console.log("Операция прошла успешно.");
   return response.json();
 }
 

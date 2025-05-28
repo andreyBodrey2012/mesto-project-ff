@@ -132,7 +132,7 @@ const handleOpenPopupDelete = (callbackSucces = () => {}) => {
 function handleClickImage(data) {
   return () => {
     document.querySelector(elementSelectors.popupImage).src = data.link;
-    document.querySelector(elementSelectors.popupImage).alt = data.name
+    document.querySelector(elementSelectors.popupImage).alt = data.name;
     document.querySelector(elementSelectors.popupCaption).textContent =
       data.name;
     openPopupImage();
@@ -203,24 +203,23 @@ function loadProfileData() {
         avatarImg.style.backgroundImage = `url(${user.avatar})`;
       }
       userInfo = { ...user };
-    }).catch(error => {
+    })
+    .catch((error) => {
       console.error("Ошибка при загрузки профиля:", error);
     });
 }
 
 function initCards() {
-  Promise.all([
-    fetchCards().then((data) => {
-      return data.map((card) => ({
+  fetchCards()
+    .then((data) => {
+      const cards = data.map((card) => ({
         name: card.name,
         link: card.link,
         likes: card.likes,
         ownerId: card.owner._id,
         id: card._id,
       }));
-    }),
-  ])
-    .then(([cards]) => {
+
       profileTitle.textContent = userInfo.name;
       profileDescription.textContent = userInfo.about;
       avatarImg.style.backgroundImage = `url(${userInfo.avatar})`;
@@ -240,11 +239,15 @@ function initPopups() {
   popupImage.classList.add(elementSelectors.popupIsAnimated);
   deletePopup.classList.add(elementSelectors.popupIsAnimated);
 
-  addButton.addEventListener("click", openPopup(popupAddNewCard))
+  addButton.addEventListener("click", openPopup(popupAddNewCard));
 
   editButton.addEventListener("click", (evt) => {
-    const nameInput = document.querySelector(elementSelectors.popupInputTypeName);
-    const jobInput = document.querySelector(elementSelectors.popupInputTypeDescription);
+    const nameInput = document.querySelector(
+      elementSelectors.popupInputTypeName,
+    );
+    const jobInput = document.querySelector(
+      elementSelectors.popupInputTypeDescription,
+    );
     nameInput.value = profileTitle.textContent;
     jobInput.value = profileDescription.textContent;
     openPopup(popupEditProfile)(popupImage);
@@ -262,14 +265,16 @@ function initPopups() {
 function handleFormEditAvatar(evt) {
   evt.preventDefault();
 
-  const avatarInput = document.querySelector(elementSelectors.popupInputTypeAvatar);
+  const avatarInput = document.querySelector(
+    elementSelectors.popupInputTypeAvatar,
+  );
   const avatarImg = document.querySelector(elementSelectors.avatarImg);
 
   editAvatarApi(avatarInput, avatarImg)
     .then(() => {
       closePopup(popupEditAvatar);
     })
-    .catch(error => {
+    .catch((error) => {
       console.error("Ошибка при редактировании аватара:", error);
     });
 }
@@ -277,26 +282,30 @@ function handleFormEditAvatar(evt) {
 function handleFormEditProfile(evt) {
   evt.preventDefault();
   const nameInput = document.querySelector(elementSelectors.popupInputTypeName);
-  const jobInput = document.querySelector(elementSelectors.popupInputTypeDescription);
+  const jobInput = document.querySelector(
+    elementSelectors.popupInputTypeDescription,
+  );
 
   editProfileApi(jobInput.value, nameInput.value)
     .then(() => {
       profileTitle.textContent = nameInput.value;
       profileDescription.textContent = jobInput.value;
-      closePopup(popupEditProfile)
+      closePopup(popupEditProfile);
     })
-    .catch(error => {
+    .catch((error) => {
       console.error("Ошибка при редактировании профиля:", error);
     });
 }
 
 function handleFormAddCard(evt) {
   evt.preventDefault();
-  const cardNameInput = document.querySelector(elementSelectors.popupInputTypeCardName);
+  const cardNameInput = document.querySelector(
+    elementSelectors.popupInputTypeCardName,
+  );
   const urlInput = document.querySelector(elementSelectors.popupInputTypeUrl);
 
   serverAddCard(cardNameInput.value, urlInput.value)
-    .then(data => {
+    .then((data) => {
       const newCard = addCard({
         id: data._id,
         name: data.name,
@@ -306,15 +315,15 @@ function handleFormAddCard(evt) {
         isOwner: data.owner._id === userInfo.id,
       });
       cardsPlace.prepend(newCard);
-      
+
       cardNameInput.value = "";
       urlInput.value = "";
-      
+
       clearValidation(formAddCard, validationConfig);
 
       closePopup(evt.target.closest(elementSelectors.popup));
     })
-    .catch(error => {
+    .catch((error) => {
       console.error("Ошибка при добавлении карточки:", error);
     });
 }
@@ -323,11 +332,15 @@ document.querySelector(".footer__copyright").innerText =
   `© ${new Date().getFullYear()} Mesto Russia`;
 
 window.addEventListener("load", () => {
-  loadProfileData().then(() => {
-    // @todo: Вывести карточки на страницу
-    initCards();
+  loadProfileData()
+    .then(() => {
+      // @todo: Вывести карточки на страницу
+      initCards();
 
-    // @todo: Функция открытия модального окна
-    initPopups();
-  });
+      // @todo: Функция открытия модального окна
+      initPopups();
+    })
+    .catch((error) => {
+      console.error(`Ошибка: ${error}`);
+    });
 });
